@@ -1,0 +1,91 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: alerts-service
+  
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/stock-analytics}
+      database: stock-analytics
+  
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+  
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: alerts-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: stockTick:com.stockanalytics.shared.model.StockTick
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: alertNotification:com.stockanalytics.shared.model.AlertNotification
+
+# Kafka Topics
+kafka:
+  topic:
+    stocks:
+      ticks: stocks.ticks
+    alerts:
+      notifications: alerts.notifications
+
+# Mail Configuration
+mail:
+  from: ${MAIL_FROM:alerts@stockanalytics.com}
+
+# Logging
+logging:
+  level:
+    com.stockanalytics.alerts: INFO
+    org.springframework.kafka: INFO
+    org.springframework.data.mongodb: INFO
+    org.springframework.mail: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Profiles
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS_DOCKER:redpanda:9092}
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://host.docker.internal:27017/stock-analytics}
+  mail:
+    host: ${MAIL_HOST_DOCKER:mailhog}
+    port: ${MAIL_PORT_DOCKER:1025}

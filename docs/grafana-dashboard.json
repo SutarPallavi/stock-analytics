@@ -1,0 +1,88 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Stock Analytics Platform",
+    "tags": ["stock", "analytics", "kafka", "mongodb"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Kafka Consumer Lag",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "kafka_consumer_group_max_lag",
+            "legendFormat": "{{consumer_group}} - {{topic}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "API Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_count[5m])",
+            "legendFormat": "{{uri}} - {{method}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Stock Ticks Generated",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(stock_ticks_generated_total[5m])",
+            "legendFormat": "Ticks/sec"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Alert Fires",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(alerts_fired_total[5m])",
+            "legendFormat": "Alerts/sec"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Portfolio Updates",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(portfolio_updates_total[5m])",
+            "legendFormat": "Updates/sec"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8}
+      },
+      {
+        "id": 6,
+        "title": "Analytics Metrics",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(analytics_metrics_generated_total[5m])",
+            "legendFormat": "Metrics/sec"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}

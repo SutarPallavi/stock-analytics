@@ -1,0 +1,61 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: analytics-service
+  
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    streams:
+      application-id: stock-analytics-streams
+      properties:
+        processing.guarantee: exactly_once_v2
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.springframework.kafka.support.serializer.JsonSerde
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: stockTick:com.stockanalytics.marketdata.model.StockTick,analyticsMetric:com.stockanalytics.analytics.model.AnalyticsMetric
+        rocksdb.config.setter: org.apache.kafka.streams.state.RocksDBConfigSetter
+        commit.interval.ms: 1000
+        cache.max.bytes.buffering: 0
+        auto.offset.reset: earliest
+
+# Kafka Topics
+kafka:
+  topic:
+    stocks:
+      ticks: stocks.ticks
+    analytics:
+      metrics: analytics.metrics
+
+# Logging
+logging:
+  level:
+    com.stockanalytics.analytics: INFO
+    org.apache.kafka.streams: INFO
+    org.springframework.kafka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Profiles
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS_DOCKER:redpanda:9092}

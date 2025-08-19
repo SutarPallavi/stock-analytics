@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Cache Maven packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+
+    - name: Cache Maven wrapper
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2/wrapper
+        key: ${{ runner.os }}-maven-wrapper-${{ hashFiles('**/.mvn/wrapper/maven-wrapper.properties') }}
+        restore-keys: ${{ runner.os }}-maven-wrapper
+
+    - name: Run Maven Spotless check
+      run: ./mvnw spotless:check
+
+    - name: Run Maven compile
+      run: ./mvnw compile
+
+    - name: Run Maven tests
+      run: ./mvnw test
+      env:
+        MONGODB_URI: mongodb://localhost:27017/stock-analytics-test
+
+    - name: Run Maven verify
+      run: ./mvnw verify
+      env:
+        MONGODB_URI: mongodb://localhost:27017/stock-analytics-test
+
+    - name: Build all modules
+      run: ./mvnw clean install -DskipTests
